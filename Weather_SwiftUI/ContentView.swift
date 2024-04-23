@@ -15,12 +15,13 @@ struct ContentView: View {
     @State var currentTab = Page.home
     @State var goToSearch = false
 
+    @StateObject var homeViewModel = HomeViewModel()
     var body: some View {
         NavigationView {
 
         ZStack(alignment: .bottom) {
             TabView(selection: $currentTab){
-                    HomeView()
+                HomeView(viewModel: homeViewModel)
                         .tag(Page.home)
               
                 SettingView()

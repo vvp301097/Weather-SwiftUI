@@ -6,10 +6,13 @@
 //
 
 import SwiftUI
+import Combine
 
 struct HomeView: View {
     
     @State var isHourly: Bool = true
+    
+    @ObservedObject var viewModel: HomeViewModel
     var body: some View {
         ZStack {
             VStack(spacing: 24) {
@@ -41,30 +44,36 @@ struct HomeView: View {
         }
         
         .ignoresSafeArea()
-        
+        .onAppear {
+            viewModel.getCurrentLocationInfo()
+        }
     }
     
     @ViewBuilder
     func infoView() -> some View {
+        let weather = viewModel.weatherInfo?.weather
         VStack(spacing: 12) {
-            Text("Montreal")
+            Text(viewModel.weatherInfo?.location.name ?? "N/a")
                 .font(.system(size: 34, weight: .regular))
                 .foregroundColor(.white)
                 .frame(height: 41)
             
-            Text("19°")
+            Text((weather != nil ? "\(Int( weather!.temperature.currentValue().value))" : "N/a") + "°" )
                 .font(.system(size: 96, weight: .thin))
                 .foregroundColor(.white)
                 .frame(height: 70)
             VStack(spacing: 8) {
-                Text("Mostly Clear")
+                Text(weather?.weatherText ?? "")
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "EBEBF5").opacity(0.6))
                     .frame(height: 20)
-                Text("H:24°   L:18°")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(height: 20)
+                if weather != nil {
+                    Text("H:\(Int( weather!.maxTemperature.currentValue().value ))°   L:\( Int(weather!.minTemperature.currentValue().value))°")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(height: 20)
+                }
+                
             }
             
         }

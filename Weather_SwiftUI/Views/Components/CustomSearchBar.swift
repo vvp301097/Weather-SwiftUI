@@ -31,7 +31,8 @@ struct CustomSearchBar: View {
                 .stroke(Color(hex: "000000").opacity(0.25))
                 .shadow(color: Color(hex: "000000").opacity(1),radius: 4, x: 4, y: 4)
                 .shadow(color: Color(hex: "000000").opacity(1),radius: 4, x: -4, y: -4)
-                .clipped()
+                .clipShape(            RoundedRectangle(cornerRadius: 10)
+                          )
         )
             
         
