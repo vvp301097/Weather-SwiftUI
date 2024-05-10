@@ -65,7 +65,14 @@ class ApiService: ApiServiceInterface {
             }
             .eraseToAnyPublisher()
     }
-        
+    
+    func getHourlyWeather(for locationKey: String) -> AnyPublisher<[HourlyWeather], Error> {
+        buildRequest(pathComponent: "forecasts/v1/hourly/12hour/\(locationKey)", params: [("details", "true")])
+            .tryMap { data in
+                try JSONDecoder().decode([HourlyWeather].self, from: data)
+            }
+            .eraseToAnyPublisher()
+    }
     
     private func buildRequest(method: String = "GET", pathComponent: String, params: [(String, String)]) -> AnyPublisher<Data, Error> {
         let url = baseURL.appendingPathComponent(pathComponent)
@@ -106,21 +113,7 @@ class ApiService: ApiServiceInterface {
                 }
             }
             .eraseToAnyPublisher()
-        
-
-            
-//      return session.rx.response(request: request)
-//            .map { response, data in
-//                switch response.statusCode {
-//                case 200 ..< 300:
-//                    return data
-//                case 400 ..< 500:
-//                throw ApiError.cityNotFound
-//                 default:
-//                   throw ApiError.serverFailure
-//
-//                }
-//            }
+    
         
     }
 }

@@ -13,15 +13,15 @@ struct Weather: Decodable {
     let weatherText: String
     let uvIndex: Int
     let isDateTime: Bool
-    let visibility: WeatherParam
-    let pressure: WeatherParam
+    let visibility: UnitType
+    let pressure: UnitType
     let wind: Wind
-    let minTemperature: WeatherParam
-    let maxTemperature: WeatherParam
-    let temperature: WeatherParam
-    let realFeelTemperature: WeatherParam
+    let minTemperature: UnitType
+    let maxTemperature: UnitType
+    let temperature: UnitType
+    let realFeelTemperature: UnitType
     let humidity: Int
-
+    var hourlyWeather: [HourlyWeather] = []
     enum CodingKeys: String, CodingKey {
         case weatherText = "WeatherText"
         case icon = "WeatherIcon"
@@ -34,7 +34,7 @@ struct Weather: Decodable {
         case wind = "Wind"
         case humidity = "RelativeHumidity"
         case temperatureSummary = "TemperatureSummary"
-
+        case imperial = "Imperial"
     }
     
     init(from decoder: Decoder) throws {
@@ -44,87 +44,22 @@ struct Weather: Decodable {
         weatherText = try values.decode(String.self, forKey: .weatherText)
         uvIndex = try values.decode(Int.self,forKey: .uvIndex)
         isDateTime = try values.decode(Bool.self,forKey: .isDateTime)
-        temperature = try values.decode(WeatherParam.self, forKey: .temperature)
-        visibility = try values.decode(WeatherParam.self,forKey: .visibility)
-        pressure = try values.decode(WeatherParam.self,forKey: .pressure)
-        realFeelTemperature = try values.decode(WeatherParam.self,forKey: .realFeelTemperature)
+        
+        let temperature = try values.nestedContainer(keyedBy: CodingKeys.self, forKey: .temperature)
+        self.temperature = try temperature.decode(UnitType.self, forKey: .imperial)
+        let visibility = try values.nestedContainer(keyedBy: CodingKeys.self, forKey: .visibility)
+        self.visibility = try visibility.decode(UnitType.self,forKey: .imperial)
+        
+        let pressure = try values.nestedContainer(keyedBy: CodingKeys.self, forKey: .pressure)
+        self.pressure = try pressure.decode(UnitType.self,forKey: .imperial)
+        
+        let realFeelTemperature = try values.nestedContainer(keyedBy: CodingKeys.self, forKey: .realFeelTemperature)
+        self.realFeelTemperature = try realFeelTemperature.decode(UnitType.self,forKey: .imperial)
         humidity = try values.decode(Int.self,forKey: .humidity)
         wind = try values.decode(Wind.self,forKey: .wind)
         let temperatureSummary = try values.decode(TemperatureSummary.self, forKey: .temperatureSummary)
         minTemperature = temperatureSummary.past24HourRange.minimum
         maxTemperature = temperatureSummary.past24HourRange.maximum
-    }
-    
-    
-    // MARK: - WeatherParam
-    struct WeatherParam: Codable {
-        let metric, imperial: UnitType
-        
-        
-        enum CodingKeys: String, CodingKey {
-            case metric = "Metric"
-            case imperial = "Imperial"
-        }
-        
-        func currentValue(isMetric: Bool = true) -> UnitType {
-            isMetric ? metric : imperial
-        }
-    }
-
-    // MARK: - UnitType
-    struct UnitType: Codable {
-        let value: Double
-        let unit: String
-        let unitType: Int
-
-        enum CodingKeys: String, CodingKey {
-            case value = "Value"
-            case unit = "Unit"
-            case unitType = "UnitType"
-        }
-    }
-    
-    // MARK: - Wind
-    struct Wind: Codable {
-        let direction: Direction
-        let speed: WeatherParam
-
-        enum CodingKeys: String, CodingKey {
-            case direction = "Direction"
-            case speed = "Speed"
-        }
-    }
-    
-    // MARK: - Direction
-    struct Direction: Codable {
-        let degrees: Int
-        let localized, english: String
-
-        enum CodingKeys: String, CodingKey {
-            case degrees = "Degrees"
-            case localized = "Localized"
-            case english = "English"
-        }
-    }
-    
-    // MARK: - TemperatureSummary
-    struct TemperatureSummary: Codable {
-        let past24HourRange: PastHourRange
-
-        enum CodingKeys: String, CodingKey {
-            case past24HourRange = "Past24HourRange"
-        }
-    }
-    
-    
-    // MARK: - PastHourRange
-    struct PastHourRange: Codable {
-        let minimum, maximum: WeatherParam
-
-        enum CodingKeys: String, CodingKey {
-            case minimum = "Minimum"
-            case maximum = "Maximum"
-        }
     }
     
 }
@@ -217,5 +152,104 @@ func iconToIconString(icon: Int) -> String {
     
     default:
         return ""
+    }
+}
+
+
+//// MARK: - WeatherParam
+//enum WeatherParam: Codable {
+//    typealias RawValue = UnitType
+//
+//    case metric, imperial
+//
+//
+//    enum CodingKeys: String, CodingKey {
+//        case metric = "Metric"
+//        case imperial = "Imperial"
+//    }
+//
+////    func currentValue(isMetric: Bool = false) -> UnitType {
+////        isMetric ? metric : imperial
+////    }
+//}
+
+// MARK: - UnitType
+struct UnitType: Decodable {
+    let value: Double
+    let unit: String
+    let unitType: Int
+
+    enum CodingKeys: String, CodingKey {
+        case value = "Value"
+        case unit = "Unit"
+        case unitType = "UnitType"
+    }
+}
+
+// MARK: - Wind
+struct Wind: Decodable {
+    let direction: Direction
+    let speed: UnitType
+
+    enum CodingKeys: String, CodingKey {
+        case direction = "Direction"
+        case speed = "Speed"
+        case imperial = "Imperial"
+
+    }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        direction = try values.decode(Direction.self, forKey: .direction)
+        if let speed = try? values.decode(UnitType.self, forKey: .speed) {
+            self.speed = speed
+        } else {
+            let speed = try values.nestedContainer(keyedBy: CodingKeys.self, forKey: .speed)
+            self.speed = try speed.decode(UnitType.self, forKey: .imperial)
+            
+        }
+    }
+}
+
+// MARK: - Direction
+struct Direction: Decodable {
+    let degrees: Int
+    let localized, english: String
+
+    enum CodingKeys: String, CodingKey {
+        case degrees = "Degrees"
+        case localized = "Localized"
+        case english = "English"
+    }
+}
+
+// MARK: - TemperatureSummary
+struct TemperatureSummary: Decodable {
+    let past24HourRange: PastHourRange
+
+    enum CodingKeys: String, CodingKey {
+        case past24HourRange = "Past24HourRange"
+    }
+}
+
+
+// MARK: - PastHourRange
+struct PastHourRange: Decodable {
+    let minimum, maximum: UnitType
+
+    enum CodingKeys: String, CodingKey {
+        case minimum = "Minimum"
+        case maximum = "Maximum"
+        case imperial = "Imperial"
+
+    }
+    
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let minimum = try values.nestedContainer(keyedBy: CodingKeys.self, forKey: .minimum)
+        self.minimum = try minimum.decode(UnitType.self, forKey: .imperial)
+        
+        let maximum = try values.nestedContainer(keyedBy: CodingKeys.self, forKey: .maximum)
+        self.maximum = try maximum.decode(UnitType.self, forKey: .imperial)
+
     }
 }

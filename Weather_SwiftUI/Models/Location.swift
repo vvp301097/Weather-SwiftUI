@@ -7,12 +7,22 @@
 
 import Foundation
 import CoreLocation
+import UIKit
 struct Location: Decodable {
     let key: String
     let name: String
     let country: String
     let region: String
     let coordinate: CLLocationCoordinate2D
+    
+    static let empty = Location(key: "-1", name: "Unknown", country: "Unknown", region: "Unknown", coordinate: .init(latitude: .init(-1), longitude: .init(-1)))
+    init(key: String, name: String, country: String, region: String, coordinate: CLLocationCoordinate2D) {
+        self.key = key
+        self.name = name
+        self.country = country
+        self.region = region
+        self.coordinate = coordinate
+    }
     
     
     enum CodingKeys: String, CodingKey {

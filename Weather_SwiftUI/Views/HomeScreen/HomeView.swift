@@ -45,20 +45,20 @@ struct HomeView: View {
         
         .ignoresSafeArea()
         .onAppear {
-            viewModel.getCurrentLocationInfo()
+            viewModel.getCurrentWeather()
         }
     }
     
     @ViewBuilder
     func infoView() -> some View {
-        let weather = viewModel.weatherInfo?.weather
+        let weather = viewModel.weather
         VStack(spacing: 12) {
-            Text(viewModel.weatherInfo?.location.name ?? "N/a")
+            Text(viewModel.location?.name ?? "N/a")
                 .font(.system(size: 34, weight: .regular))
                 .foregroundColor(.white)
                 .frame(height: 41)
             
-            Text((weather != nil ? "\(Int( weather!.temperature.currentValue().value))" : "N/a") + "°" )
+            Text((weather != nil ? "\(Int( weather!.temperature.value))" : "N/a") + "°" )
                 .font(.system(size: 96, weight: .thin))
                 .foregroundColor(.white)
                 .frame(height: 70)
@@ -68,7 +68,7 @@ struct HomeView: View {
                     .foregroundColor(Color(hex: "EBEBF5").opacity(0.6))
                     .frame(height: 20)
                 if weather != nil {
-                    Text("H:\(Int( weather!.maxTemperature.currentValue().value ))°   L:\( Int(weather!.minTemperature.currentValue().value))°")
+                    Text("H:\(Int( weather!.maxTemperature.value ))°   L:\( Int(weather!.minTemperature.value))°")
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(height: 20)
@@ -83,6 +83,8 @@ struct HomeView: View {
     func sheetView() -> some View {
         GeometryReader { proxy in
             let height = proxy.size.height
+            if let weather = viewModel.weather {
+                
             
             VStack(alignment: .center ,spacing: 0) {
                 HStack {
@@ -158,10 +160,10 @@ struct HomeView: View {
                             , alignment: .bottom)
                 if isHourly {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        
+                        let items = viewModel.getDataForHourly(hourlys: weather.hourlyWeather, weather: weather)
                         HStack(spacing: 12) {
-                            ForEach(0..<5) { _ in
-                                HourlyView(isActive: .constant(false))
+                            ForEach(items, id: \.self) { item in
+                                HourlyView(data: item)
                             }
                         }
                         .padding(20)
@@ -171,7 +173,7 @@ struct HomeView: View {
                         
                         HStack(spacing: 12) {
                             ForEach(0..<6) { _ in
-                                HourlyView(isActive: .constant(false))
+//                                HourlyView(isActive: .constant(false))
                             }
                         }
                         .padding(20)
@@ -199,7 +201,9 @@ struct HomeView: View {
                 
             )
             .offset(y:height - 350)
-            
+            } else {
+                ProgressView()
+            }
         }
 
     }

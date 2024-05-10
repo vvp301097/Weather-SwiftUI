@@ -24,9 +24,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
    
     
     var statusString: String {
-//        guard let status = locationStatus else {
-//            return "unknown"
-//        }
+
         
         switch locationStatus {
         case .notDetermined: return "notDetermined"
